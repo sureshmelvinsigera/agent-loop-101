@@ -1,0 +1,8 @@
+[project]
+name = "agent-loop-101"
+version = "0.1.0"
+description = "A hands-on intro to tool use with Claude: build an agent loop in about 100 lines"
+requires-python = ">=3.11"
+dependencies = [
+    "anthropic>=0.40.0",
+]
