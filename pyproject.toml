@@ -5,4 +5,5 @@ description = "A hands-on intro to tool use with Claude: build an agent loop in 
 requires-python = ">=3.11"
 dependencies = [
     "anthropic>=0.40.0",
+    "mcp>=1.2.0,<2",  # v2 renamed FastMCP; this exercise uses the v1 API
 ]
