@@ -65,12 +65,19 @@ def run_agent(user_prompt: str, max_turns: int = 10) -> str:
     messages = [{"role": "user", "content": user_prompt}]
 
     for turn in range(max_turns):
-        response = client.messages.create(
+        # EXERCISE 4: stream the reply so text appears as it is generated.
+        # The loop is unchanged: after the stream ends we still get the full
+        # message (with its stop_reason and tool_use blocks) to act on.
+        with client.messages.stream(
             model=MODEL,
             max_tokens=1024,
             tools=TOOLS,
             messages=messages,
-        )
+        ) as stream:
+            for text in stream.text_stream:
+                print(text, end="", flush=True)
+            response = stream.get_final_message()
+        print()
         # Keep the assistant turn (including its tool_use blocks) in history.
         messages.append({"role": "assistant", "content": response.content})
 
@@ -104,7 +111,9 @@ if __name__ == "__main__":
             " ".join(sys.argv[1:])
             or "What's 1234 * 5678, and should I bring an umbrella in New York?"
     )
-    print(run_agent(prompt))
+    answer = run_agent(prompt)
+    if answer.startswith("Stopped:"):  # normal answers were already streamed
+        print(answer)
 
 # ---- Exercises (great teaching material too) --------------------------------
 # 1. Add a third tool, e.g. search_notes(query), and watch the model pick it.
