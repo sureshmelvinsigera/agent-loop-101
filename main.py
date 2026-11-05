@@ -7,6 +7,7 @@ Setup:
 Run:
     python agent_demo.py
     python agent_demo.py "What is 1234 * 5678, and what's the weather in NYC?"
+    python agent_demo.py "What did I write down about the agent debugging round?"
 
 The big idea (teach this to others!):
     An "agent" is just a loop:
@@ -42,6 +43,20 @@ TOOLS = [
             "required": ["city"],
         },
     },
+    # EXERCISE 1: a third tool. Watch the model pick it from the description alone.
+    {
+        "name": "search_notes",
+        "description": (
+            "Search the user's personal notes for a keyword and return the matching "
+            "notes. Use this when the user asks about something they wrote down, "
+            "such as meetings, to-dos or plans."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {"query": {"type": "string"}},
+            "required": ["query"],
+        },
+    },
 ]
 
 
@@ -57,7 +72,25 @@ def get_weather(city: str) -> str:
     return f"{city}: 58F, light rain"  # swap in a real API call here
 
 
-IMPLEMENTATIONS = {"calculate": calculate, "get_weather": get_weather}
+NOTES = [
+    "Anthropic interview: 30-minute hiring manager call with Matt",
+    "Agent debugging round: Python, 55 minutes, Claude Code allowed",
+    "Take-home: build a lab someone else could teach, 3 to 4 hours",
+    "Groceries: milk, eggs, coffee",
+]
+
+
+def search_notes(query: str) -> str:
+    q = query.lower()
+    hits = [n for n in NOTES if q in n.lower()]
+    return "\n".join(f"- {n}" for n in hits) or "No notes matched."
+
+
+IMPLEMENTATIONS = {
+    "calculate": calculate,
+    "get_weather": get_weather,
+    "search_notes": search_notes,
+}
 
 
 # ---- 3. The agent loop ------------------------------------------------------
