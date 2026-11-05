@@ -53,8 +53,16 @@ def calculate(expression: str) -> str:
     return str(eval(expression, {"__builtins__": {}}))  # safe enough for a demo
 
 
+_weather_calls: dict[str, int] = {}
+
+
 def get_weather(city: str) -> str:
-    return f"{city}: 58F, light rain"  # swap in a real API call here
+    # EXERCISE 2: the first call for each city fails on purpose, like a real outage.
+    # Run it and watch whether the model retries, changes its approach, or gives up.
+    _weather_calls[city] = _weather_calls.get(city, 0) + 1
+    if _weather_calls[city] == 1:
+        raise ConnectionError("weather service unavailable (HTTP 503)")
+    return f"{city}: 58F, light rain"
 
 
 IMPLEMENTATIONS = {"calculate": calculate, "get_weather": get_weather}
@@ -83,17 +91,22 @@ def run_agent(user_prompt: str, max_turns: int = 10) -> str:
         for block in response.content:
             if block.type == "tool_use":
                 print(f"[turn {turn}] tool call: {block.name}({block.input})")
+                is_error = False
                 try:
                     output = IMPLEMENTATIONS[block.name](**block.input)
                 except Exception as e:  # return errors to the model so it can recover
                     output = f"Error: {e}"
-                results.append(
-                    {
-                        "type": "tool_result",
-                        "tool_use_id": block.id,
-                        "content": output,
-                    }
-                )
+                    is_error = True
+                    print(f"[turn {turn}] tool failed: {output}")
+                result = {
+                    "type": "tool_result",
+                    "tool_use_id": block.id,
+                    "content": output,
+                }
+                if is_error:
+                    # Tells the model the tool FAILED, rather than "Error: ..." being the answer.
+                    result["is_error"] = True
+                results.append(result)
         messages.append({"role": "user", "content": results})
 
     return "Stopped: hit max_turns."
