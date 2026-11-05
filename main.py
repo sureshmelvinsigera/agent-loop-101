@@ -21,6 +21,13 @@ import anthropic
 client = anthropic.Anthropic()  # reads ANTHROPIC_API_KEY from the environment
 MODEL = "claude-sonnet-5-5"
 
+# EXERCISE 3: a system prompt. Run the same question on main and on this branch,
+# then compare tone, length and whether the model uses the calculate tool.
+SYSTEM = (
+    "You are a concise travel-day assistant. Always use the calculate tool for "
+    "arithmetic instead of working it out yourself. Answer in at most two sentences."
+)
+
 # ---- 1. Tool definitions: a name, a description, and a JSON Schema ----------
 # The description is a prompt: the model decides when to call a tool from it.
 TOOLS = [
@@ -68,6 +75,7 @@ def run_agent(user_prompt: str, max_turns: int = 10) -> str:
         response = client.messages.create(
             model=MODEL,
             max_tokens=1024,
+            system=SYSTEM,
             tools=TOOLS,
             messages=messages,
         )
